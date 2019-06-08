@@ -29,15 +29,15 @@ x = sym.symbols('x')
 xs = npy.arange(-1, 8, 0.1)
 
 # Definition der Funktion: f(x) = (x − 2)3 + 5
-f1 = sym.sin(x)
-# f1 = (x - 2) ** 3 + 5
+# f1 = sym.sin(x)
+f1 = (x - 2) ** 3 + 5
 
 # Funktion umwandeln in eine Lambda-Funktion
 # (ermoeglicht das einfache berechnen des Funktionswertes)
 f1_lambda = sym.lambdify(x, f1, 'numpy')
-plt.plot(xs, f1_lambda(xs), label='f(x) = (x - 2)^3 + 5', color='green')
+plt.plot(xs, f1_lambda(xs), label='f(x) = (x - 2)^3 + 5', color='green', linewidth=3)
 plt.plot(xs, taylor_1(f1, 1, x)(xs), 'r--', label='Erstes Taylorpolynom')
-plt.title('Beispielfunktion ')
+plt.title('Beispielfunktion f(x) = (x - 2)^3 + 5')
 plt.legend()
 plt.show()
 
@@ -62,13 +62,24 @@ def taylor_n(f, x0, n: int, symbol: sym.Symbol):
     return sym.lambdify(symbol, fx, module)
 
 
-plt.ylim(-2, 2)
-plt.plot(xs, f1_lambda(xs), label='f(x) = (x - 2)^3 + 5', color='green')
+plt.plot(xs, f1_lambda(xs), label='f(x) = (x - 2)^3 + 5', color='blue', linewidth=3)
 plt.plot(xs, taylor_n(f1, 1, 1, x)(xs), 'r--', label='Taylorpolynom 1ten Grades')
-plt.plot(xs, taylor_n(f1, 1, 2, x)(xs), 'b--', label='Taylorpolynom 2ten Grades')
+plt.plot(xs, taylor_n(f1, 1, 2, x)(xs), 'g--', label='Taylorpolynom 2ten Grades')
 plt.plot(xs, taylor_n(f1, 1, 3, x)(xs), 'y--', label='Taylorpolynom 3ten Grades')
-plt.plot(xs, taylor_n(f1, 1, 10, x)(xs), 'y--', label='Taylorpolynom 3ten Grades')
-# plt.plot(xs, taylor_n(f1, 1, 3, x)(xs), 'm--', label='Taylorpolynom 4ten Grades')
-plt.title('Beispielfunktion ')
+plt.title('Beispielfunktion f(x) = (x - 2)^3 + 5')
+plt.legend()
+plt.show()
+
+f2 = sym.sin(x)
+f2_lambda = sym.lambdify(x, f2, module)
+plt.ylim(-1.5, 6)
+plt.plot(xs, f2_lambda(xs), label='f(x) = sin(x)', color='blue', linewidth=3)
+plt.plot(xs, taylor_n(f2, 1, 1, x)(xs), 'g--', label='Taylorpolynom 1ten Grades')
+plt.plot(xs, taylor_n(f2, 1, 2, x)(xs), 'r--', label='Taylorpolynom 2ten Grades')
+plt.plot(xs, taylor_n(f2, 1, 4, x)(xs), 'c--', label='Taylorpolynom 4ten Grades')
+plt.plot(xs, taylor_n(f2, 1, 8, x)(xs), 'm--', label='Taylorpolynom 8ten Grades')
+plt.plot(xs, taylor_n(f2, 1, 12, x)(xs), '--', color='#666633', label='Taylorpolynom 12ten Grades')
+plt.plot(xs, taylor_n(f2, 1, 15, x)(xs), '--', label='Taylorpolynom 15ten Grades')
+plt.title('Beispielfunktion sin(x)')
 plt.legend()
 plt.show()
