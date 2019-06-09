@@ -14,11 +14,15 @@ class NewtonCalculateExeption(Exception):
 
 
 def printfloat(number: float):
-    rounded = round(number, 8)
+    rounded = round(number, 3)
     return str(rounded)
 
 
 class NewtonVerfahren(object):
+    """
+    Fuer die Berechnung einer Nullstelle einer Funktion
+    mit dem Newton-Verfahren
+    """
     __precision: float
     __max_tries: int
     __symbol: sym.Symbol
@@ -28,6 +32,9 @@ class NewtonVerfahren(object):
     __funktion: sym.Function
 
     def __init__(self, symbol: sym.Symbol):
+        """
+        :param symbol: Beispiel x
+        """
         self.__precision = 0.01
         self.__max_tries = 10
         self.__tries = 0
@@ -36,12 +43,24 @@ class NewtonVerfahren(object):
         self.__range: tuple = (-10, 10)
 
     def set_visual(self, visual: bool):
+        """
+        aktiviert die Visualisierung
+        :param visual:
+        """
         self.__doVisual = visual
+
+    def set_maxtries(self, tries: int):
+        self.__max_tries = tries
 
     def precision(self, precision: float):
         self.__precision = precision
 
     def range(self, start: int, end: int):
+        """
+        X-Bereich fuer die Visualisierung
+        :param start:
+        :param end:
+        """
         self.__range = (start, end)
 
     def solve(self, f: sym.Function, start: float):
@@ -109,8 +128,8 @@ class NewtonVerfahren(object):
             a = result[0]
             # [optionale] visualisierung des Zwischenergebnisses
             if self.__doVisual:
-                text = 'Nr:' + str(self.__tries + 1) + " Punkt: " + printfloat(point) + " Wert:" + printfloat(
-                    a) + " Abweichung: " + printfloat(self.__resolve(a))
+                text = 'Nr:' + str(self.__tries + 1) + " Xn:" + printfloat(
+                    a) + " Abw: " + printfloat(self.__resolve(a))
                 self.__visualisiere(tangente, style='--', description=text)
             return a
         else:
@@ -141,5 +160,9 @@ newton.precision(0.01)
 newton.range(-5, 5)
 solve = newton.solve(f1, 0.5)
 print(solve)
+
+f2: sym.Function = (x - 3) ** 5 - 10
+newton.set_maxtries(14)
+newton.solve(f2, 1)
 
 # newton.solve(f1, )
