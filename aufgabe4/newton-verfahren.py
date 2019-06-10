@@ -42,20 +42,20 @@ class NewtonVerfahren(object):
         self.__doVisual = False
         self.__range: tuple = (-10, 10)
 
-    def set_visual(self, visual: bool):
+    def set_visualization(self, visual: bool):
         """
         aktiviert die Visualisierung
         :param visual:
         """
         self.__doVisual = visual
 
-    def set_maxtries(self, tries: int):
+    def set_max_tries(self, tries: int):
         self.__max_tries = tries
 
-    def precision(self, precision: float):
+    def set_precision(self, precision: float):
         self.__precision = precision
 
-    def range(self, start: int, end: int):
+    def set_visualization_range(self, start: int, end: int):
         """
         X-Bereich fuer die Visualisierung
         :param start:
@@ -78,36 +78,16 @@ class NewtonVerfahren(object):
         self.__tries = 0
         current_point = start
         current_div = abs(f.evalf(subs={self.__symbol: current_point}))
+        # wiederholen bis genauigkeit erreicht oder das Maximum der Versuche erreicht ist
         while current_div > self.__precision and self.__tries < self.__max_tries:
             current_point = self.__do_newton(f, current_point)
-            result = self.__resolve(current_point)
+            result = self.__evaluate(current_point)
             current_div = abs(result)
             self.__tries = self.__tries + 1
 
         if self.__doVisual:
-            self.visual_result()
+            self.__visual_result()
         return current_point, current_div
-
-    def __resolve(self, x_value):
-        """
-        Berechnet den Funktionswert
-        :param x_value:
-        :return: y wert
-        """
-        result = self.__funktion.evalf(subs={self.__symbol: x_value})
-        return result
-
-    def visual_result(self):
-        """
-        Visualisiert das Ergebnis
-        :return:
-        """
-        plt.ylim(self.__range[0] - 10, self.__range[1])
-        plt.axhline(y=0, color='k')
-        plt.axvline(x=0, color='k')
-        plt.grid(True)
-        plt.legend()
-        plt.show()
 
     def __do_newton(self, f: sym.Function, point: float):
         """
@@ -123,21 +103,43 @@ class NewtonVerfahren(object):
         gleichung = sym.Eq(tangente, 0)
         # Gleichung aufloesen
         result = sym.solve(gleichung)
-        # Kein Nullpunkt gefunden -> Verfahren ist gescheitert
+        # Nullstelle gefunden
         if len(result) > 0:
             a = result[0]
             # [optionale] visualisierung des Zwischenergebnisses
             if self.__doVisual:
                 text = 'Nr:' + str(self.__tries + 1) + " Xn:" + printfloat(
-                    a) + " Abw: " + printfloat(self.__resolve(a))
+                    a) + " Abw: " + printfloat(self.__evaluate(a))
                 self.__visualisiere(tangente, style='--', description=text)
             return a
+        # Keine Nullstelle gefunden -> Verfahren ist gescheitert
         else:
             exeption = NewtonCalculateExeption(point)
             if self.__doVisual:
                 plt.text(0, 0, exeption.value)
                 plt.show()
             raise exeption
+
+    def __evaluate(self, x_value):
+        """
+        Berechnet den Funktionswert
+        :param x_value:
+        :return: y wert
+        """
+        result = self.__funktion.evalf(subs={self.__symbol: x_value})
+        return result
+
+    def __visual_result(self):
+        """
+        Visualisiert das Ergebnis
+        :return:
+        """
+        plt.ylim(self.__range[0] - 10, self.__range[1])
+        plt.axhline(y=0, color='k')
+        plt.axvline(x=0, color='k')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
 
     def __visualisiere(self, function: sym.Function, style: str = 'b--', description: str = ' '):
         """
@@ -154,15 +156,19 @@ class NewtonVerfahren(object):
 # Testen
 x = sym.symbols('x')
 newton = NewtonVerfahren(x)
-f1: sym.Function = -x ** 2 + 4
-newton.set_visual(True)
-newton.precision(0.01)
-newton.range(-5, 5)
-solve = newton.solve(f1, 0.5)
-print(solve)
+fx: sym.Function = -x ** 2 + 4
+newton.set_visualization(True)
+result = newton.solve(fx, 1)
+print(result)
 
-f2: sym.Function = (x - 3) ** 5 - 10
-newton.set_maxtries(14)
-newton.solve(f2, 1)
+# newton.precision(0.01)
+# newton.range(-5, 5)
+# solve = newton.solve(f1, 0.5)
+# print(solve)
+
+# f2: sym.Function = (x - 3) ** 5 - 10
+# newton.set_max_tries(14)
+# # newton.solve(f2, 1)
+# newton.solve(f2, 3)
 
 # newton.solve(f1, )
