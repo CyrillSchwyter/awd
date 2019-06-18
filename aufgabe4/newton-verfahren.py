@@ -161,14 +161,22 @@ newton.set_visualization(True)
 result = newton.solve(fx, 1)
 print(result)
 
-# newton.precision(0.01)
-# newton.range(-5, 5)
-# solve = newton.solve(f1, 0.5)
-# print(solve)
+# x = sym.symbols('x')
+# newton = NewtonVerfahren(x)
+# fx: sym.Function = -x ** 2 + 4
+# newton.set_visualization(True)
+# result = newton.solve(fx, 0)
+# print(result)
 
-# f2: sym.Function = (x - 3) ** 5 - 10
-# newton.set_max_tries(14)
-# # newton.solve(f2, 1)
-# newton.solve(f2, 3)
+newton.set_precision(0.01)
+newton.set_visualization_range(-5, 5)
+solve = newton.solve(fx, 0.5)
+print(solve)
 
-# newton.solve(f1, )
+x = sym.symbols('x')
+newton = NewtonVerfahren(x)
+f2: sym.Function = (x - 3) ** 5 - 10
+newton.set_max_tries(14)
+newton.set_visualization(True)
+res = newton.solve(f2, 1)
+print(res)
