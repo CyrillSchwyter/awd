@@ -1,169 +1,102 @@
-import numpy as npy
 import sympy as sym
+import numpy as npy
 
 
-class NumericCalculatorBase(object):
-    """
-    Basis einer Numerischen Kalkulation
-    """
-    def __init__(self, symbol: sym.Symbol):
-        """
-        Konstruktor
-        :param symbol: mit welchem gerechnet wird. meist 'x'
-        """
-        self.symb = symbol
-
-    def get_symbol(self):
-        """
-        Gibt das Symbol zurueck
-        :return: symbol meist 'x'
-        """
-        return self.symb
-
-    def eval(self, func: sym.Function, argument):
-        """
-        Berechnet den Funktionswert
-        :param func: funktion die ausgewertet werden soll
-        :param argument: wert der der Funktion uebergeben wird
-        :return: funktionswert
-        """
-        result = func.evalf(subs={self.symb: argument})
-        return result
-
-
-class Trapez(NumericCalculatorBase):
-    """
-    Berechnet die Integration einer Funktion mit Hilfe der Trapezregel
-    """
-    def __init__(self, symbol: sym.Symbol):
-        super().__init__(symbol)
-
-    def calc(self, integrand: sym.Function, a: float, b: float):
-        result = sym.Rational(b - a, 2) * (
-                super().eval(integrand, a) + super().eval(integrand, b))
-        return result
-
-
-class Sympson(NumericCalculatorBase):
-    """
-    Berechnet die Integration einer Funktion mit Hilfe der Simpsonschen Regel
-    """
-    def __init__(self, symbol: sym.Symbol):
-        super().__init__(symbol)
-
-    def calc(self, integrand: sym.Function, a: float, b: float):
-        """
-        Integriert mit Hilfe der Simpsonschen Regel
-
-        :param integrand: funktion die integriert wird
-        :param a: untere integrationsvariable
-        :param b:
-        :return:
-        """
-        rat_1 = sym.Rational(b - a, 6)
-        rat_2 = sym.Rational(a + b, 2)
-
-        result = rat_1 * (
-                super().eval(integrand, a) + 4 * super().eval(integrand, rat_2) + super().eval(integrand, b))
-        return result
-
-
-class CircleVolumCalculator(object):
-    """
-    Berechnet das Volumen eines Kreises mit Hilfe einer Implementierung
-    eines NumericCalculators
-    """
-    def __init__(self, numeric_calculator):
-        self.calculator = numeric_calculator
-        self.delta_target = 0.2
-        self.x = numeric_calculator.get_symbol()
-        self.r = sym.Symbol('r')
-        self.kreis_function = sym.sqrt(self.r ** 2 - self.x ** 2)
-
-    def set_delta_target(self, delta: float):
-        self.delta_target = delta
-
-    def calculate(self, radius: float):
-        function = self.kreis_function.subs(self.r, radius)
-        a = radius * -1
-        b = radius
-        width = b - a
-        n = int(round(width / self.delta_target))
-        # recalculate real delta
-        delta = (b - a) / n
-        summe = 0
-        for i in range(0, n):
-            summe = summe + self.calculator.calc(function, a + i * delta, a + (i + 1) * delta)
-        return 2 * summe
-
-
-class CircleRingCalculator(object):
-
-    def __init__(self, circle_volumn_valculator):
-        self.calc = circle_volumn_valculator
-
-    def calculate(self, outside_radius: float, inner_radius: float):
-        return self.calc.calculate(outside_radius) - self.calc.calculate(inner_radius)
-
-    def set_delta_target(self, delta: float):
-        self.calc.set_delta_target(delta)
-
-
-class DirectRingCalculator(object):
+class GreatTrapez(object):
 
     @staticmethod
-    def calculate(outside_radius: float, inner_radius: float):
-        return outside_radius ** 2 * npy.pi - inner_radius ** 2 * npy.pi
+    def calculate(integrand: sym.Function, variable: sym.Symbol, a: float, b: float, n: int):
+        """
+        Numerische Berechnung mittels der grossen Trapez-Formel
 
-    def set_delta_target(self, delta: float):
-        return
+        :param integrand:
+        :param variable:
+        :param a: untere Integrationsgrenze
+        :param b: obere Integrationsgrenze
+        :param n: anzahl Aufteilungen des Invervalls
+        :return: numerische Loesung
+        """
+        j, i = sym.symbols('j, i')
 
+        xs = j * sym.Rational(b - a, n)
 
-class CalculatorComparator(object):
+        summation = sym.summation(integrand.subs(variable, xs.subs(j, i)), (i, 1, n - 1))
 
-    def __init__(self, trapez, simpson, direkt_function):
-        self.direct_function = direkt_function
-        self.simpson = simpson
-        self.trapez = trapez
-
-    def calculate(self, outside_radius: float, inner_radius: float, delta: float):
-        print('------------------ new Test-Run -------------------------')
-        print('Calculate: outside-radius: ' + str(outside_radius) + ' inner-radius: ' + str(inner_radius))
-        print('used delta: ' + str(delta))
-        self.trapez.set_delta_target(delta)
-        self.simpson.set_delta_target(delta)
-        direct_value = self.direct_function.calculate(outside_radius, inner_radius)
-        simpson_value = self.simpson.calculate(outside_radius, inner_radius)
-        trapez_value = self.trapez.calculate(outside_radius, inner_radius)
-        print('real-value: '+str(direct_value))
-        self.log('trapez', trapez_value, direct_value)
-        self.log('simpson', simpson_value, direct_value)
-
-    def log(self, calculator_name: str, calc_value: float, real_value: float):
-        diff = real_value - calc_value
-        proz_diff = diff / real_value
-        print(calculator_name + ' value: ' + str(calc_value) + ' diff: ' + str(diff) + ' proz_diff: ' + str(proz_diff))
+        x0 = integrand.subs(variable, xs.subs(j, 0))
+        xn = integrand.subs(variable, xs.subs(j, n))
+        bruch = sym.Rational(b - a, 2 * n)
+        return bruch * (x0 + xn + 2 * summation)
 
 
-volum_calculator_simpson = CircleVolumCalculator(Sympson(sym.Symbol('x')))
-print('volumCalculator_with_simpson ' + str(volum_calculator_simpson.calculate(4)))
+class GreatSimpson(object):
 
-volum_calculator_trapez = CircleVolumCalculator(Trapez(sym.Symbol('x')))
-print('volumCalculator_with_trapez ' + str(volum_calculator_trapez.calculate(4)))
+    @staticmethod
+    def calculate(integrand: sym.Function, variable: sym.Symbol, a: float, b: float, n: int):
+        """
+        Numerische Berechnung mittels der grossen Simpson-Formel
 
-circle_ring_simpson = CircleRingCalculator(volum_calculator_simpson)
-circle_ring_trapez = CircleRingCalculator(volum_calculator_trapez)
-print(circle_ring_simpson.calculate(4, 10))
+        :param integrand:
+        :param variable:
+        :param a: untere Integrationsgrenze
+        :param b: obere Integrationsgrenze
+        :param n: anzahl Aufteilungen des Invervalls
+        :return: numerische Loesung
+        """
+        j, i = sym.symbols('j, i')
 
-comparator = CalculatorComparator(circle_ring_trapez, circle_ring_simpson, DirectRingCalculator())
-comparator.calculate(12, 5, 2)
-comparator.calculate(12, 5, 1.5)
-comparator.calculate(12, 5, 1)
-comparator.calculate(12, 5, 0.5)
-comparator.calculate(12, 5, 0.2)
+        xs = j * sym.Rational(b - a, 2 * n)
 
-comparator.calculate(24, 5, 0.2)
-# comparator.calculate(24, 5, 1.5)
-# comparator.calculate(24, 5, 1)
-# comparator.calculate(24, 5, 0.5)
-# comparator.calculate(24, 5, 0.2)
+        x0 = integrand.subs(variable, xs.subs(j, 0))
+        xn = integrand.subs(variable, xs.subs(j, 2 * n))
+        bruch = sym.Rational(b - a, 6 * n)
+        summe_1 = sym.summation(integrand.subs(variable, xs.subs(j, 2 * i)), (i, 1, n - 1))
+        summe_2 = sym.summation(integrand.subs(variable, xs.subs(j, 2 * i - 1)), (i, 1, n))
+        return bruch * (x0 + xn + 2 * summe_1 + 4 * summe_2)
+
+
+class CalculationSympy(object):
+
+    @staticmethod
+    def calculate(integrand: sym.Function, variable: sym.Symbol, a: float, b: float, n: int):
+        """
+        Integration mittels sympy
+
+        :param integrand:
+        :param variable:
+        :param a: untere Integrationsgrenze
+        :param b: obere Integrationsgrenze
+        :param n: wird nicht benoetigt
+        :return: numerische Loesung
+        """
+        integrate = sym.integrate(integrand, (variable, a, b))
+        return integrate
+
+
+class CyrcleRingVolumnCalculator(object):
+
+    @staticmethod
+    def calculate(calculation_strategy, r: float, d: float, n: int):
+        x = sym.Symbol('x')
+        halbkreis = sym.sqrt(r ** 2 - x ** 2)
+        versatz = sym.Rational(d, 2) + r
+        oberer_halb_kreis = (halbkreis + versatz) ** 2
+        unterer_halb_kreis = (-1 * halbkreis + versatz) ** 2
+        oben = 2 * npy.pi * calculation_strategy.calculate(oberer_halb_kreis, x, 0, r, n)
+        unten = 2 * npy.pi * calculation_strategy.calculate(unterer_halb_kreis, x, 0, r, n)
+        result = oben - unten
+        return result.evalf()
+
+
+cyrcleCalculator = CyrcleRingVolumnCalculator()
+
+trapez_result = cyrcleCalculator.calculate(GreatTrapez(), 10, 20, 20)
+print('trapez:')
+print(trapez_result)
+
+sympson_result = cyrcleCalculator.calculate(GreatSimpson(), 10, 20, 20)
+print('sympson:')
+print(sympson_result)
+
+sympy_result = cyrcleCalculator.calculate(CalculationSympy(), 10, 20, 20)
+print('numpy:')
+print(sympy_result)
